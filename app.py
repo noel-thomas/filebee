@@ -17,7 +17,7 @@ def index():
 # response to api /add - to upload files
 @app.post('/add')
 def add_files():
-    f = request.files['the_file'] # the_file identification of uploaded file
+    f = request.files['file'] # the_file identification of uploaded file
     f.save(f"/tmp/{secure_filename(f.filename)}")
     return {"msg": "added"}
 
