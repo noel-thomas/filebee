@@ -8,8 +8,10 @@ import (
 	"path/filepath"
 	"mime/multipart"
 	"io"
+	"io/ioutil"
 	"fmt"
 	"time"
+	"encoding/json"
 )
 
 
@@ -71,15 +73,54 @@ func fileAdd(){
 			response, responseErr := client.Do(req)
 			if responseErr != nil {
 				fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+				// exit code 3 for POST request failure
 				exitCode = 3
 				return
 			}
-			fmt.Println(response)
+
+			// read reply after updloading
+        		responseBody, responseErr := ioutil.ReadAll(response.Body)
+        		if responseErr != nil {
+                		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+                		// exit code 5 for file not upload error
+                		exitCode = 5
+                		return
+        		}
+
+			fmt.Printf("%s %v\n", element, string(responseBody))
 			defer response.Body.Close()
 	}
 }
 
 	
+func listFiles(){
+
+	// sending get request to http api to fetch file list
+	response, responseErr := http.Get("http://127.0.0.1:5000/ls")
+	if responseErr != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+		// exit code 4 for GET request failure
+		exitCode = 4
+		return
+	}
+
+	// read body from the get request
+	responseBody, responseErr := ioutil.ReadAll(response.Body)
+	if responseErr != nil {
+                fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+                // exit code 5 for no response body
+                exitCode = 5
+                return
+        }
+
+	// convert response body to string and print
+	var responseSlice []string
+	_ = json.Unmarshal([]byte(responseBody), &responseSlice)
+	
+	for _, element := range responseSlice{
+	fmt.Println(element)
+	}
+}
 
 
 func main() {
@@ -91,8 +132,15 @@ func main() {
 //	fmt.Println(len(os.Args[2:]), os.Args[2:])
 
 	// if the cmdline option is add
-	if os.Args[1] == "add" {
+	if len(os.Args) < 3 && os.Args[1] != "ls"{
+		fmt.Println("Usage: store ['ls', 'add', 'rm', 'update'] FILE")
+		return
+	}else if os.Args[1] == "add" {
 		fileAdd()
-
+	} else if os.Args[1] == "ls" {
+		listFiles()
 	}
+
+
+
 }
