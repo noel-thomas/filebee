@@ -13,17 +13,9 @@ import (
 )
 
 
-func main() {
-	// initial value of exit code
-	exitCode := 0
-	defer func(){
-		os.Exit(exitCode)
-	}()
-// testing commandline args
-//	fmt.Println(len(os.Args[2:]), os.Args[2:])
+var exitCode int = 0 
 
-	// if the cmdline option is add
-	if os.Args[1] == "add" {
+func fileAdd(){
 		
 		// Identify the current working directory
 		dirPath, err := os.Getwd()
@@ -47,7 +39,7 @@ func main() {
 			// absolute path of the files to be uploaded
 			fileRoute := path.Join(dirPath, element)
 
-			fmt.Println(fileRoute)  //##### REMOVE ######
+//-------------------			fmt.Println(fileRoute)  //##### REMOVE ######
 			// open files to be uploaded
 			openFile, openErr := os.Open(fileRoute)	
 			if openErr != nil{
@@ -56,8 +48,8 @@ func main() {
 				exitCode = 2
 				return
 			}
-			fmt.Println(filepath.Base(openFile.Name()))
-			fmt.Println(element)
+//--------------------			fmt.Println(filepath.Base(openFile.Name()))
+//---------------			fmt.Println(element)
 			defer openFile.Close()
 // http://127.0.0.1:5000
 // Read file contents	
@@ -88,6 +80,19 @@ func main() {
 }
 
 	
+
+
+func main() {
+	// initial value of exit code
+	defer func(){
+		os.Exit(exitCode)
+	}()
+// testing commandline args
+//	fmt.Println(len(os.Args[2:]), os.Args[2:])
+
+	// if the cmdline option is add
+	if os.Args[1] == "add" {
+		fileAdd()
+
+	}
 }
-
-
