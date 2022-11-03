@@ -17,7 +17,7 @@ import (
 
 var exitCode int = 0 
 
-func fileAdd(){
+func addFiles(){
 		
 		// Identify the current working directory
 		dirPath, err := os.Getwd()
@@ -80,16 +80,21 @@ func fileAdd(){
 
 			// read reply after updloading
         		responseBody, responseErr := ioutil.ReadAll(response.Body)
+
+			// use the below line for a single update after upload
+        		//_, responseErr = ioutil.ReadAll(response.Body)
         		if responseErr != nil {
                 		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
                 		// exit code 5 for file not upload error
                 		exitCode = 5
                 		return
         		}
-
+			// print for each file uploaded - comment of not required
 			fmt.Printf("%s %v\n", element, string(responseBody))
 			defer response.Body.Close()
 	}
+	// to get a single update for multiple file upload uncomment the below line
+	// fmt.Println("Uploaded!")
 }
 
 	
@@ -123,6 +128,12 @@ func listFiles(){
 }
 
 
+func removeFiles() {
+	
+		fmt.Println("removed")
+}
+
+
 func main() {
 	// initial value of exit code
 	defer func(){
@@ -131,14 +142,23 @@ func main() {
 // testing commandline args
 //	fmt.Println(len(os.Args[2:]), os.Args[2:])
 
-	// if the cmdline option is add
+	// if no cmdline args
+	if len(os.Args) == 1{
+		fmt.Fprintf(os.Stderr, "Usage: store ['ls', 'add', 'rm', 'update'] FILE\n")
+		exitCode = 6
+		return
+	}
+
 	if len(os.Args) < 3 && os.Args[1] != "ls"{
-		fmt.Println("Usage: store ['ls', 'add', 'rm', 'update'] FILE")
+		fmt.Fprintf(os.Stderr, "Usage: store ['ls', 'add', 'rm', 'update'] FILE\n")
+		exitCode = 6
 		return
 	}else if os.Args[1] == "add" {
-		fileAdd()
-	} else if os.Args[1] == "ls" {
+		addFiles()
+	}else if os.Args[1] == "ls" {
 		listFiles()
+	}else if os.Args[1] == "rm" {
+		removeFiles()
 	}
 
 

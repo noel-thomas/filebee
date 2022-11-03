@@ -31,6 +31,22 @@ def add_files():
 def list_files(): 
     return os.listdir(repoDir)
 
+# remove requested file from store
+@app.post('/rm')
+def remove_files():
+   filenames = request.get_json()
+   returnContent = []
+   for i in filenames:
+        if os.path.isfile(repoDir + str(i)) == False:
+            returnContent.append(f"{i} file not found!")
+        else:
+            try:
+                os.remove(repoDir + str(i))
+                returnContent.append(f"{i} deleted")
+            except OSError:
+                returnContent.append("Error: unable to remove the file")
+   return returnContent
+
 # sample test for custom route
 @app.route('/<string:datas>')
 def list_print(datas):
