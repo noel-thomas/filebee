@@ -17,6 +17,20 @@ import (
 
 var exitCode int = 0 
 
+func verifyFiles() int {
+	for _, element := range os.Args[2:]{
+		fileExt := filepath.Ext(element)
+		if fileExt != ".txt" {
+			// exit code 1 for invalid extension
+			exitCode = 1
+			fmt.Fprintf(os.Stderr, "Invalid filename %s \nPlease use ONLY plain-text files with '.txt' extension", element)
+	
+		}
+	}
+	return exitCode
+}
+
+
 func addFiles(){
 		
 		// Identify the current working directory
@@ -27,15 +41,10 @@ func addFiles(){
 		
 		// iterate through each files
 		for _, element := range os.Args[2:]{
-			file_ext := filepath.Ext(element)
-			// verify the file extension
-			if file_ext != ".txt" {
-				// exit code 1 for invalid extension
-				err := fmt.Errorf("Please use ONLY plain-text files with '.txt' extension")
-				exitCode = 1
-				fmt.Fprintf(os.Stderr, "%s\n", err)
-				return
 
+			// verify the file extension
+			if verifyFiles() == 1 {
+				return
 			}
 
 			// absolute path of the files to be uploaded
@@ -129,8 +138,11 @@ func listFiles(){
 
 
 func removeFiles() {
-	
-		fmt.Println("removed")
+	// verify the files 
+	if verifyFiles() == 1 {
+		return
+	}
+	fmt.Println(os.Args)
 }
 
 
