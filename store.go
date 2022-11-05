@@ -12,14 +12,24 @@ import (
 	"fmt"
 	"time"
 	"encoding/json"
+	"crypto/md5"
 )
 
 
 var exitCode int = 0 
 
+// struct for holding file names and hashes to convert into json array
+var hashinfo struct {
+	name string
+	hash string
+}
+
 func verifyFiles() int {
 	for _, element := range os.Args[2:]{
+		// get file extension
 		fileExt := filepath.Ext(element)
+
+		// check whether file extension is ".txt"
 		if fileExt != ".txt" {
 			// exit code 1 for invalid extension
 			exitCode = 1
@@ -28,6 +38,66 @@ func verifyFiles() int {
 		}
 	}
 	return exitCode
+}
+
+
+func hashFiles() {
+	// initialize string slice to hold file hashes
+	//h := make([]string, len(os.Args[2:]))
+	fileInfo := []hashinfo{}
+
+	// calculate the hashes for individual files
+	for _, element := range os.Args[2:]{
+		file, err := os.Open(element)
+		if err != nil {
+			// exit code 2 for invalid filename
+			exitCode = 2
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			return
+		}
+		defer file.Close()
+	
+		hash := md5.New()
+
+		if _, err := io.Copy(hash, file); err != nil {
+			// exit code 8 for unable to calculate file hash
+			exitCode = 8
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+		}
+
+		// add file hash into the slice h
+		//h = append(h, string(hash.Sum(nil)))
+		data := hashinfo{name: element, hash: hash.Sum(nil)}
+		fileInfo = append(fileInfo, data)
+	}
+
+	payload, _ := json.Marshal(fileInfo)
+	response, responseErr := http.Post("http://127.0.0.1:5000/rm", "application/json", bytes.NewBuffer(payload))
+	if responseErr != nil {
+		// exit 7 unable to sent data to remove files
+		exitCode = 7
+		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+		return
+	}
+	
+	// read body from the get request
+	responseBody, responseErr := ioutil.ReadAll(response.Body)
+	if responseErr != nil {
+                fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+                // exit code 5 for no response body
+                exitCode = 5
+                return
+        }
+
+	// convert response body to string and print
+	var responseSlice []string
+	_ = json.Unmarshal([]byte(responseBody), &responseSlice)
+	
+	for _, element := range responseSlice{
+	fmt.Println(element)
+	}
+	return
+
 }
 
 
@@ -142,7 +212,32 @@ func removeFiles() {
 	if verifyFiles() == 1 {
 		return
 	}
-	fmt.Println(os.Args)
+	payload, _ := json.Marshal(os.Args[2:])
+	response, responseErr := http.Post("http://127.0.0.1:5000/rm", "application/json", bytes.NewBuffer(payload))
+	if responseErr != nil {
+		// exit 7 unable to sent data to remove files
+		exitCode = 7
+		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+		return
+	}
+	
+	// read body from the get request
+	responseBody, responseErr := ioutil.ReadAll(response.Body)
+	if responseErr != nil {
+                fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+                // exit code 5 for no response body
+                exitCode = 5
+                return
+        }
+
+	// convert response body to string and print
+	var responseSlice []string
+	_ = json.Unmarshal([]byte(responseBody), &responseSlice)
+	
+	for _, element := range responseSlice{
+	fmt.Println(element)
+	}
+	return
 }
 
 
@@ -153,6 +248,7 @@ func main() {
 	}()
 // testing commandline args
 //	fmt.Println(len(os.Args[2:]), os.Args[2:])
+	hashFiles()
 
 	// if no cmdline args
 	if len(os.Args) == 1{
@@ -171,6 +267,10 @@ func main() {
 		listFiles()
 	}else if os.Args[1] == "rm" {
 		removeFiles()
+	}else {
+		fmt.Fprintf(os.Stderr, "Invalid option!\nUsage: store ['ls', 'add', 'rm', 'update'] FILE\n")
+		exitCode = 6
+		return
 	}
 
 

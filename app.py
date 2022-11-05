@@ -3,6 +3,8 @@ import flask
 from flask import Flask, request, url_for
 from werkzeug.utils import secure_filename
 from markupsafe import escape
+from hashlib import md5
+from mmap import ACCESS_READ, mmap
 
 #UPLOAD_FOLDER = '/tmp'
 #ALLOWED_EXTENSIONS = {'txt'}
@@ -29,7 +31,22 @@ def add_files():
 # response for the api ls - to list the files
 @app.route('/ls')
 def list_files(): 
-    return os.listdir(repoDir)
+    if not os.listdir(repoDir):
+        return ["Empty!"]
+    else:
+        return os.listdir(repoDir)
+
+# file hash verification
+@app.post('/hash')
+def hash_files():
+    remoteHash = request.get_json()
+    returnContent = []
+    for i in os.listdir(repoDir):
+        path = repoDir + i
+        with open(path) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+            data = md5(file).hexdigest()
+            # COMPARE THE HASH
+    return data
 
 # remove requested file from store
 @app.post('/rm')
