@@ -272,6 +272,48 @@ func wordCount(){
 }
 
 
+func freqWords() {
+    if os.Args[2] =="-n" || os.Args[2] == "--limit" {
+	
+
+	// convert to json
+	payload, _ := json.Marshal(os.Args)
+
+	response, responseErr := http.Post("http://127.0.0.1:5000/freq", "application/json", bytes.NewBuffer(payload))
+	if responseErr != nil {
+		// exit 7 unable to sent data to remove files
+		exitCode = 7
+		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+		return
+	}
+	
+	// read body from the get request
+	responseBody, responseErr := ioutil.ReadAll(response.Body)
+	if responseErr != nil {
+                fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+                // exit code 5 for no response body
+                exitCode = 5
+                return
+        }
+
+	// convert response body to string and print
+	var responseSlice []string
+	//_ = json.Unmarshal([]byte(responseBody), &responseSlice)
+	_ = json.Unmarshal([]byte(responseBody), &responseSlice)
+
+	//fmt.Println(responseSlice)
+	
+	// processed data from reply
+	for _, element := range responseSlice {
+		fmt.Println(element)
+	}	
+
+	defer response.Body.Close()
+	return
+
+	}
+}
+
 func removeFiles() {
 	// verify the files 
 	if verifyFiles() == 1 {
@@ -327,6 +369,8 @@ func main() {
 	// each cmdline options
 	if os.Args[1] == "add" {
 		addFiles()
+	}else if os.Args[1] == "freq-words"{
+		freqWords()
 	}else if os.Args[1] == "ls" {
 		listFiles()
 	}else if os.Args[1] == "rm" {

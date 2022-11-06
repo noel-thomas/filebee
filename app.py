@@ -1,6 +1,7 @@
 import os
 import flask
 import shutil
+from collections import Counter
 from flask import Flask, request, url_for
 from werkzeug.utils import secure_filename
 from markupsafe import escape
@@ -54,22 +55,34 @@ def word_count():
     return f"{count}"
 
 
+@app.post('/freq')
+def freq_words():
+    n = request.get_json()
+    if os.listdir(repoDir) == [] :
+        return "Empty file-store!"
+    else:
+        words = ""
+        for i in os.listdir(repoDir):
+        # path to the file in file-store
+            path = repoDir + i
+            file = open(path, "rt")
+            data = file.read()
+            words = words + data
+            file.close()
+        split_words = words.split()
+        counter = Counter(split_words)
+        common = counter.most_common(4)
+    return n
+    
+
+
+
 # file hash verification
 @app.post('/hash')
 def hash_files():
     remoteHash = request.get_json()
-    # REMOVE
     
-    #return remoteHash
-    #return '[{"Name":"data.txt","Hash":"764efa883dda1e11db47671c4a3bbd9e"},{"Name":"opera.txt","Hash":"7c501a0514172db8a0cad8b627de5f98"}]'
-
     returnContent = []
-    ########### REMOVE
-    
-    #for j in range(len(remoteHash)):
-    #    returnContent.append(remoteHash[j])
-    #    #j = j+1
-    #return returnContent
 
     # if file-store is empty reply all files are absent
     if os.listdir(repoDir) == [] :
@@ -183,4 +196,4 @@ def list_print(datas):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8000)
