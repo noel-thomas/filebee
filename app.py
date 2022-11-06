@@ -58,41 +58,42 @@ def hash_files():
 
     for i in os.listdir(repoDir):
         path = repoDir + i
-        with open(path) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
-            data = md5(file).hexdigest()
-            # COMPARE THE HASH
-            #j = 0
-            #for k in remoteHash[j].keys():
-            for j in range(len(remoteHash)):
-                if remoteHash[j]['Hash'] == data:
-                    if remoteHash[j]['Name'] == i:
-                        # returnContent.file_exist = yes
-                        state = 'present'
-                        value = {'Name': remoteHash[j]['Name'], 'State': 'present'}
-                        # returnContent.append(value)
+        if os.path.getsize(path) != 0:
+            with open(path) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+                data = md5(file).hexdigest()
+                # COMPARE THE HASH
+                #j = 0
+                #for k in remoteHash[j].keys():
+                for j in range(len(remoteHash)):
+                    if remoteHash[j]['Hash'] == data:
+                        if remoteHash[j]['Name'] == i:
+                            # returnContent.file_exist = yes
+                            state = 'present'
+                            value = {'Name': remoteHash[j]['Name'], 'State': 'present'}
+                            # returnContent.append(value)
+                        else:
+                            # replcate i with the name j['name']
+                            state = 'replicate'
+                            value = {'Name': remoteHash[j]['Name'], 'State': 'replicate'}
+                            # returnContent.append(value)
                     else:
-                        # replcate i with the name j['name']
-                        state = 'replicate'
-                        value = {'Name': remoteHash[j]['Name'], 'State': 'replicate'}
-                        # returnContent.append(value)
-                else:
-                    # returnContent.file_name = j['name']
-                    # returnContent.file_exist = no
-                    state = 'absent'
-                    value = {'Name': remoteHash[j]['Name'], 'State': 'absent'}
-                #returnContent.append(value)
-                #LOOK HERE
-                if j > (len(returnContent) - 1):
-                    returnContent.append(value)
-                else:
-                    if returnContent[j]['State'] == state:
-                        break
-                    elif (returnContent[j]['State'] == 'absent' and state != 'absent') or (returnContent[j]['State'] == 'replicate' and state == 'present') :
-                        fpath = repoDir + remoteHash[j]['Name']
-                        if not os.path.exists(fpath):
-                            shutil.copy(path, fpath)
-                        returnContent[j]['State'] = state
-                #j = j+1
+                        # returnContent.file_name = j['name']
+                        # returnContent.file_exist = no
+                        state = 'absent'
+                        value = {'Name': remoteHash[j]['Name'], 'State': 'absent'}
+                    #returnContent.append(value)
+                    #LOOK HERE
+                    if j > (len(returnContent) - 1):
+                        returnContent.append(value)
+                    else:
+                        if returnContent[j]['State'] == state:
+                            break
+                        elif (returnContent[j]['State'] == 'absent' and state != 'absent') or (returnContent[j]['State'] == 'replicate' and state == 'present') :
+                            fpath = repoDir + remoteHash[j]['Name']
+                            if not os.path.exists(fpath):
+                                shutil.copy(path, fpath)
+                            returnContent[j]['State'] = state
+                    #j = j+1
 
 
     return returnContent
