@@ -17,7 +17,7 @@ app = Flask(__name__)
 # setting max file size to 16 MB
 #app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 #app.config['MAX_CONTENT_LENGTH'] = 2 * 1000
-repoDir = "/tmp/filebee/"
+repoDir = "/var/filebee/"
 # reply for root
 @app.route('/')
 def index():

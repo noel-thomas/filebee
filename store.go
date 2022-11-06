@@ -16,6 +16,8 @@ import (
 	"crypto/md5"
 )
 
+// initialize the server/file-store URL here
+var Url string = "http://127.0.0.1:8000"
 
 var exitCode int = 0 
 
@@ -82,7 +84,7 @@ func hashFiles(responseSlice *[]replyinfo) {
 	// convert to json
 	payload, _ := json.Marshal(fileInfo)
 
-	response, responseErr := http.Post("http://127.0.0.1:5000/hash", "application/json", bytes.NewBuffer(payload))
+	response, responseErr := http.Post(Url + "/hash", "application/json", bytes.NewBuffer(payload))
 	if responseErr != nil {
 		// exit 7 unable to sent data to remove files
 		exitCode = 7
@@ -174,7 +176,7 @@ func addFiles(){
 				io.Copy(part, openFile)
 				writer.Close()
         
-				req, _ := http.NewRequest("POST", "http://127.0.0.1:5000/add", body)
+				req, _ := http.NewRequest("POST", Url + "/add", body)
 				req.Header.Add("Content-Type", writer.FormDataContentType())
 				client := &http.Client{Timeout: 120 * time.Second}
 				response, responseErr := client.Do(req)
@@ -213,7 +215,7 @@ func addFiles(){
 func listFiles(){
 
 	// sending get request to http api to fetch file list
-	response, responseErr := http.Get("http://127.0.0.1:5000/ls")
+	response, responseErr := http.Get(Url + "/ls")
 	if responseErr != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
 		// exit code 4 for GET request failure
@@ -244,7 +246,7 @@ func listFiles(){
 func wordCount(){
 
 	// sending get request to http api to fetch word count
-	response, responseErr := http.Get("http://127.0.0.1:5000/wc")
+	response, responseErr := http.Get(Url + "/wc")
 	if responseErr != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
 		// exit code 4 for GET request failure
@@ -279,7 +281,7 @@ func freqWords() {
 	// convert to json
 	payload, _ := json.Marshal(os.Args)
 
-	response, responseErr := http.Post("http://127.0.0.1:5000/freq", "application/json", bytes.NewBuffer(payload))
+	response, responseErr := http.Post(Url + "/freq", "application/json", bytes.NewBuffer(payload))
 	if responseErr != nil {
 		// exit 7 unable to sent data to remove files
 		exitCode = 7
@@ -320,7 +322,7 @@ func removeFiles() {
 		return
 	}
 	payload, _ := json.Marshal(os.Args[2:])
-	response, responseErr := http.Post("http://127.0.0.1:5000/rm", "application/json", bytes.NewBuffer(payload))
+	response, responseErr := http.Post(Url + "/rm", "application/json", bytes.NewBuffer(payload))
 	if responseErr != nil {
 		// exit 7 unable to sent data to remove files
 		exitCode = 7
