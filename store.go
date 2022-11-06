@@ -47,7 +47,7 @@ func verifyFiles() int {
 }
 
 
-func hashFiles() []replyinfo {
+func hashFiles(responseSlice *[]replyinfo) {
 	// initialize string slice to hold file hashes
 	//h := make([]string, len(os.Args[2:]))
 	fileInfo := []hashinfo{}
@@ -100,15 +100,16 @@ func hashFiles() []replyinfo {
         }
 
 	// convert response body to string and print
-	var responseSlice []replyinfo
-	_ = json.Unmarshal([]byte(responseBody), &responseSlice)
+	//var responseSlice []replyinfo
+	//_ = json.Unmarshal([]byte(responseBody), &responseSlice)
+	_ = json.Unmarshal([]byte(responseBody), responseSlice)
 
 	//fmt.Println(responseSlice)
 	
 	// processed data from reply
-	for _, element := range responseSlice {
-	fmt.Println(element.Name, element.State)
-	}	
+	//for _, element := range *responseSlice {
+	//fmt.Println(element.Name, element.State)
+	//}	
 
 	defer response.Body.Close()
 	return
@@ -124,68 +125,85 @@ func addFiles(){
 			panic(err)
 		}
 		
+		// verify the file extension
+		if verifyFiles() == 1 {
+			return
+		}
+
+		var rinfo []replyinfo
 		// iterate through each files
-		for _, element := range os.Args[2:]{
+		//for _, element := range os.Args[2:]{
+		hashFiles(&rinfo)
+		
+		for _, element := range rinfo{
 
 			// verify the file extension
-			if verifyFiles() == 1 {
-				return
-			}
-
-			// absolute path of the files to be uploaded
-			fileRoute := path.Join(dirPath, element)
-
-//-------------------			fmt.Println(fileRoute)  //##### REMOVE ######
-			// open files to be uploaded
-			openFile, openErr := os.Open(fileRoute)	
-			if openErr != nil{
-				fmt.Fprintf(os.Stderr, "%s\n", openErr)
-				// exit code 2 for invalid filename
-				exitCode = 2
-				return
-			}
-//--------------------			fmt.Println(filepath.Base(openFile.Name()))
-//---------------			fmt.Println(element)
-			defer openFile.Close()
-// http://127.0.0.1:5000
-// Read file contents	
-//			result, _ := ioutil.ReadAll(openFile)
-//			fmt.Println(string(result))
-// upload files
+			//if verifyFiles() == 1 {
+			//	return
+			//}
 			
-			// Initialize new empty buffer
-			body := &bytes.Buffer{}
-			// creating multipart writer 
-			writer := multipart.NewWriter(body)
-			part, _ := writer.CreateFormFile("file", element)
-			io.Copy(part, openFile)
-			writer.Close()
+			if element.State == "absent" {
 
-			req, _ := http.NewRequest("POST", "http://127.0.0.1:5000/add", body)
-			req.Header.Add("Content-Type", writer.FormDataContentType())
-			client := &http.Client{Timeout: 120 * time.Second}
-			response, responseErr := client.Do(req)
-			if responseErr != nil {
-				fmt.Fprintf(os.Stderr, "%s\n", responseErr)
-				// exit code 3 for POST request failure
-				exitCode = 3
-				return
+
+				// absolute path of the files to be uploaded
+				fileRoute := path.Join(dirPath, element.Name)
+        
+		//-------------------			fmt.Println(fileRoute)  //##### REMOVE ######
+				// open files to be uploaded
+				openFile, openErr := os.Open(fileRoute)	
+				if openErr != nil{
+					fmt.Fprintf(os.Stderr, "%s\n", openErr)
+					// exit code 2 for invalid filename
+					exitCode = 2
+					return
+				}
+		//--------------------			fmt.Println(filepath.Base(openFile.Name()))
+		//---------------			fmt.Println(element)
+				defer openFile.Close()
+		// http://127.0.0.1:5000
+		// Read file contents	
+		//			result, _ := ioutil.ReadAll(openFile)
+		//			fmt.Println(string(result))
+		// upload files
+				
+				// Initialize new empty buffer
+				body := &bytes.Buffer{}
+				// creating multipart writer 
+				writer := multipart.NewWriter(body)
+				part, _ := writer.CreateFormFile("file", element.Name)
+				io.Copy(part, openFile)
+				writer.Close()
+        
+				req, _ := http.NewRequest("POST", "http://127.0.0.1:5000/add", body)
+				req.Header.Add("Content-Type", writer.FormDataContentType())
+				client := &http.Client{Timeout: 120 * time.Second}
+				response, responseErr := client.Do(req)
+				if responseErr != nil {
+					fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+					// exit code 3 for POST request failure
+					exitCode = 3
+					return
+				}
+        
+				// read reply after updloading
+                		responseBody, responseErr := ioutil.ReadAll(response.Body)
+        
+				// use the below line for a single update after upload
+                		//_, responseErr = ioutil.ReadAll(response.Body)
+                		if responseErr != nil {
+                        		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+                        		// exit code 5 for file not upload error
+                        		exitCode = 5
+                        		return
+                		}
+				// print for each file uploaded - comment of not required
+				fmt.Printf("%s %v\n", element.Name, string(responseBody))
+				defer response.Body.Close()
+			}else if element.State == "replicate"{
+				fmt.Printf("%s %v\n", element.Name, "replicated")
+			}else {
+				fmt.Fprintf(os.Stderr, "%s already exists\n", element.Name)
 			}
-
-			// read reply after updloading
-        		responseBody, responseErr := ioutil.ReadAll(response.Body)
-
-			// use the below line for a single update after upload
-        		//_, responseErr = ioutil.ReadAll(response.Body)
-        		if responseErr != nil {
-                		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
-                		// exit code 5 for file not upload error
-                		exitCode = 5
-                		return
-        		}
-			// print for each file uploaded - comment of not required
-			fmt.Printf("%s %v\n", element, string(responseBody))
-			defer response.Body.Close()
 	}
 	// to get a single update for multiple file upload uncomment the below line
 	// fmt.Println("Uploaded!")
@@ -267,7 +285,7 @@ func main() {
 	}()
 // testing commandline args
 //	fmt.Println(len(os.Args[2:]), os.Args[2:])
-	hashFiles()
+	//hashFiles()
 
 	// if no cmdline args
 	if len(os.Args) == 1{
