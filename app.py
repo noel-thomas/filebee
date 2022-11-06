@@ -1,5 +1,6 @@
 import os
 import flask
+import shutil
 from flask import Flask, request, url_for
 from werkzeug.utils import secure_filename
 from markupsafe import escape
@@ -35,6 +36,7 @@ def list_files():
         return ["Empty!"]
     else:
         return os.listdir(repoDir)
+
 
 # file hash verification
 @app.post('/hash')
@@ -86,8 +88,13 @@ def hash_files():
                     if returnContent[j]['State'] == state:
                         break
                     elif (returnContent[j]['State'] == 'absent' and state != 'absent') or (returnContent[j]['State'] == 'replicate' and state == 'present') :
+                        fpath = repoDir + remoteHash[j]['Name']
+                        if not os.path.exists(fpath):
+                            shutil.copy(path, fpath)
                         returnContent[j]['State'] = state
-                j = j+1
+                #j = j+1
+
+
     return returnContent
 
 # remove requested file from store
