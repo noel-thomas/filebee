@@ -54,46 +54,55 @@ def hash_files():
     #    returnContent.append(remoteHash[j])
     #    #j = j+1
     #return returnContent
+
+    # if file-store is empty reply all files are absent
     if os.listdir(repoDir) == [] :
         for k in range(len(remoteHash)):
             value = {'Name': remoteHash[k]['Name'], 'State': 'absent'}
             returnContent.append(value)
         return returnContent
 
+    # iterate through the files in the file-store
     for i in os.listdir(repoDir):
+        # path to the file in file-store
         path = repoDir + i
 
+        # check if file-store is empty
         if os.path.getsize(path) != 0:
+            # open file
             with open(path) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+                #calculate the checksum
                 data = md5(file).hexdigest()
+                
                 # COMPARE THE HASH
-                #j = 0
-                #for k in remoteHash[j].keys():
                 for j in range(len(remoteHash)):
+                    # check if remote file hash and local file hash are equal
                     if remoteHash[j]['Hash'] == data:
+                        
+                        # check if both file-names are equal 
                         if remoteHash[j]['Name'] == i:
-                            # returnContent.file_exist = yes
                             state = 'present'
                             value = {'Name': remoteHash[j]['Name'], 'State': 'present'}
-                            # returnContent.append(value)
+                            
                         else:
-                            # replcate i with the name j['name']
+                            # if names are different replicate the file in the file-store
                             state = 'replicate'
                             value = {'Name': remoteHash[j]['Name'], 'State': 'replicate'}
-                            # returnContent.append(value)
+                            
                     else:
-                        # returnContent.file_name = j['name']
-                        # returnContent.file_exist = no
+                        # if hash does'nt match then file is absent
                         state = 'absent'
                         value = {'Name': remoteHash[j]['Name'], 'State': 'absent'}
-                    #returnContent.append(value)
-                    #LOOK HERE
+                    
+                    # if checking remote content for the first time
+                    # we have to add that info into the returnContent
                     if j > (len(returnContent) - 1):
+
+                        # if it's a new record add into the return content
                         returnContent.append(value)
-                    else:
-                        if returnContent[j]['State'] == state:
-                            break
-                        elif (returnContent[j]['State'] == 'absent' and state != 'absent') or (returnContent[j]['State'] == 'replicate' and state == 'present') :
+                        
+                        # even if the record is new and the state is replicate then repicate the file in the file-store
+                        if state == 'replicate':
                             fpath = repoDir + remoteHash[j]['Name']
                             
                             if os.path.exists(fpath):
@@ -105,8 +114,30 @@ def hash_files():
                                 cfile.close()
                             else:
                                 shutil.copy2(path, fpath)
+                            
+                    else:
+                        # if both current state and the recorded state are equal then do nothing
+                        if returnContent[j]['State'] == state:
+                            break
+                        # if the recorded state in the returnContent is absent and the current state is not absent
+                        # or if the recorded state is replicate but if the file is present
+                        # then record the current state in the return content
+                        elif (returnContent[j]['State'] == 'absent' and state != 'absent') or (returnContent[j]['State'] == 'replicate' and state == 'present') :
+                            fpath = repoDir + remoteHash[j]['Name']
+                            
+                            # if the file exists but with different content then replicate
+                            if os.path.exists(fpath):
+                                with open(fpath) as cfile, mmap(cfile.fileno(), 0, access=ACCESS_READ) as cfile:
+                                    cdata = md5(cfile).hexdigest()
+                                    if cdata != data:
+                                        shutil.copy(path, fpath)
+                                        print(path, fpath)
+                                cfile.close()
+                            else:
+                                # if file does'nt exist then replicate
+                                shutil.copy2(path, fpath)
                             returnContent[j]['State'] = state
-                    #j = j+1
+                    
             file.close()
 
 
