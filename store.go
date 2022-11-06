@@ -304,6 +304,8 @@ func main() {
 		listFiles()
 	}else if os.Args[1] == "rm" {
 		removeFiles()
+	}else if os.Args[1] == "update"{
+		addFiles()
 	}else {
 		fmt.Fprintf(os.Stderr, "Invalid option!\nUsage: store ['ls', 'add', 'rm', 'update'] FILE\n")
 		exitCode = 6

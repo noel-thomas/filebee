@@ -71,6 +71,7 @@ def hash_files():
         if os.path.getsize(path) != 0:
             # open file
             with open(path) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
+            
                 #calculate the checksum
                 data = md5(file).hexdigest()
                 
