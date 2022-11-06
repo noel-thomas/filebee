@@ -54,10 +54,15 @@ def hash_files():
     #    returnContent.append(remoteHash[j])
     #    #j = j+1
     #return returnContent
-
+    if os.listdir(repoDir) == [] :
+        for k in range(len(remoteHash)):
+            value = {'Name': remoteHash[k]['Name'], 'State': 'absent'}
+            returnContent.append(value)
+        return returnContent
 
     for i in os.listdir(repoDir):
         path = repoDir + i
+
         if os.path.getsize(path) != 0:
             with open(path) as file, mmap(file.fileno(), 0, access=ACCESS_READ) as file:
                 data = md5(file).hexdigest()
@@ -90,10 +95,19 @@ def hash_files():
                             break
                         elif (returnContent[j]['State'] == 'absent' and state != 'absent') or (returnContent[j]['State'] == 'replicate' and state == 'present') :
                             fpath = repoDir + remoteHash[j]['Name']
-                            if not os.path.exists(fpath):
-                                shutil.copy(path, fpath)
+                            
+                            if os.path.exists(fpath):
+                                with open(fpath) as cfile, mmap(cfile.fileno(), 0, access=ACCESS_READ) as cfile:
+                                    cdata = md5(cfile).hexdigest()
+                                    if cdata != data:
+                                        shutil.copy(path, fpath)
+                                        print(path, fpath)
+                                cfile.close()
+                            else:
+                                shutil.copy2(path, fpath)
                             returnContent[j]['State'] = state
                     #j = j+1
+            file.close()
 
 
     return returnContent
