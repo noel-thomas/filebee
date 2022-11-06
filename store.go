@@ -241,6 +241,36 @@ func listFiles(){
 	}
 }
 
+func wordCount(){
+
+	// sending get request to http api to fetch word count
+	response, responseErr := http.Get("http://127.0.0.1:5000/wc")
+	if responseErr != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+		// exit code 4 for GET request failure
+		exitCode = 4
+		return
+	}
+
+	// read body from the get request
+	responseBody, responseErr := ioutil.ReadAll(response.Body)
+	if responseErr != nil {
+                fmt.Fprintf(os.Stderr, "%s\n", responseErr)
+                // exit code 5 for no response body
+                exitCode = 5
+                return
+        }
+
+	// convert response body to string and print
+	//var responseOut int
+	//_ = json.Unmarshal([]byte(responseBody), responseOut)
+	
+	fmt.Println("Total words in file-store:", string(responseBody))
+	
+	defer response.Body.Close()
+	
+}
+
 
 func removeFiles() {
 	// verify the files 
@@ -288,26 +318,25 @@ func main() {
 	//hashFiles()
 
 	// if no cmdline args
-	if len(os.Args) == 1{
-		fmt.Fprintf(os.Stderr, "Usage: store ['ls', 'add', 'rm', 'update'] FILE\n")
+	if len(os.Args) == 1 {
+		fmt.Fprintf(os.Stderr, "Usage: store ['ls', 'add', 'rm', 'update', 'wc'] FILE\n")
 		exitCode = 6
 		return
 	}
-
-	if len(os.Args) < 3 && os.Args[1] != "ls"{
-		fmt.Fprintf(os.Stderr, "Usage: store ['ls', 'add', 'rm', 'update'] FILE\n")
-		exitCode = 6
-		return
-	}else if os.Args[1] == "add" {
+	
+	// each cmdline options
+	if os.Args[1] == "add" {
 		addFiles()
 	}else if os.Args[1] == "ls" {
 		listFiles()
 	}else if os.Args[1] == "rm" {
 		removeFiles()
-	}else if os.Args[1] == "update"{
+	}else if os.Args[1] == "update" {
 		addFiles()
+	}else if os.Args[1] == "wc" {
+		wordCount()
 	}else {
-		fmt.Fprintf(os.Stderr, "Invalid option!\nUsage: store ['ls', 'add', 'rm', 'update'] FILE\n")
+		fmt.Fprintf(os.Stderr, "Invalid option!\nUsage: store ['ls', 'add', 'rm', 'update', 'wc'] FILE\n")
 		exitCode = 6
 		return
 	}

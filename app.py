@@ -33,9 +33,25 @@ def add_files():
 @app.route('/ls')
 def list_files(): 
     if not os.listdir(repoDir):
-        return ["Empty!"]
+        return ["Empty file-store!"]
     else:
         return os.listdir(repoDir)
+
+@app.route('/wc')
+def word_count():
+    if os.listdir(repoDir) == [] :
+        return "Empty file-store!"
+    else:
+        count = 0
+        for i in os.listdir(repoDir):
+        # path to the file in file-store
+            path = repoDir + i
+            file = open(path, "rt")
+            data = file.read()
+            words = data.split()
+            count = count + len(words)
+
+    return f"{count}"
 
 
 # file hash verification
@@ -164,3 +180,7 @@ def remove_files():
 @app.route('/<string:datas>')
 def list_print(datas):
     return f"Hi, {escape(datas)}"
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
