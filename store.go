@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"time"
 	"encoding/json"
+	"encoding/hex"
 	"crypto/md5"
 )
 
@@ -19,9 +20,14 @@ import (
 var exitCode int = 0 
 
 // struct for holding file names and hashes to convert into json array
-var hashinfo struct {
-	name string
-	hash string
+type hashinfo struct {
+	Name string //`json: "name"`
+	Hash string //`json: "hash"`
+}
+
+type replyinfo struct {
+	Name string
+	State string
 }
 
 func verifyFiles() int {
@@ -41,7 +47,7 @@ func verifyFiles() int {
 }
 
 
-func hashFiles() {
+func hashFiles() []replyinfo {
 	// initialize string slice to hold file hashes
 	//h := make([]string, len(os.Args[2:]))
 	fileInfo := []hashinfo{}
@@ -67,12 +73,16 @@ func hashFiles() {
 
 		// add file hash into the slice h
 		//h = append(h, string(hash.Sum(nil)))
-		data := hashinfo{name: element, hash: hash.Sum(nil)}
+		data := hashinfo{Name: element, Hash: hex.EncodeToString(hash.Sum(nil))}
+		//data := hashinfo{element, hex.EncodeToString(hash.Sum(nil))}
 		fileInfo = append(fileInfo, data)
+		//fmt.Println(fileInfo)
 	}
-
+	
+	// convert to json
 	payload, _ := json.Marshal(fileInfo)
-	response, responseErr := http.Post("http://127.0.0.1:5000/rm", "application/json", bytes.NewBuffer(payload))
+
+	response, responseErr := http.Post("http://127.0.0.1:5000/hash", "application/json", bytes.NewBuffer(payload))
 	if responseErr != nil {
 		// exit 7 unable to sent data to remove files
 		exitCode = 7
@@ -90,12 +100,17 @@ func hashFiles() {
         }
 
 	// convert response body to string and print
-	var responseSlice []string
+	var responseSlice []replyinfo
 	_ = json.Unmarshal([]byte(responseBody), &responseSlice)
+
+	//fmt.Println(responseSlice)
 	
-	for _, element := range responseSlice{
-	fmt.Println(element)
-	}
+	// processed data from reply
+	for _, element := range responseSlice {
+	fmt.Println(element.Name, element.State)
+	}	
+
+	defer response.Body.Close()
 	return
 
 }
@@ -203,6 +218,8 @@ func listFiles(){
 	
 	for _, element := range responseSlice{
 	fmt.Println(element)
+	
+	defer response.Body.Close()
 	}
 }
 
@@ -237,6 +254,8 @@ func removeFiles() {
 	for _, element := range responseSlice{
 	fmt.Println(element)
 	}
+	
+	defer response.Body.Close()
 	return
 }
 
