@@ -8,20 +8,19 @@ from markupsafe import escape
 from hashlib import md5
 from mmap import ACCESS_READ, mmap
 
-#UPLOAD_FOLDER = '/tmp'
-#ALLOWED_EXTENSIONS = {'txt'}
-
 app = Flask(__name__)
 #app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # setting max file size to 16 MB
 #app.config['MAX_CONTENT_LENGTH'] = 16 * 1000 * 1000
 #app.config['MAX_CONTENT_LENGTH'] = 2 * 1000
+
 repoDir = "/var/filebee/"
+
 # reply for root
 @app.route('/')
 def index():
-    return 'Hello!'
+    return 'Hello!\n'
 
 # response to api /add - to upload files
 @app.post('/add')
@@ -38,6 +37,7 @@ def list_files():
     else:
         return os.listdir(repoDir)
 
+# response for api wc - return total word count
 @app.route('/wc')
 def word_count():
     if os.listdir(repoDir) == [] :
@@ -54,7 +54,7 @@ def word_count():
 
     return f"{count}"
 
-
+# return freq words from all the files
 @app.post('/freq')
 def freq_words():
     n = request.get_json()

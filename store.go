@@ -51,7 +51,6 @@ func verifyFiles() int {
 
 func hashFiles(responseSlice *[]replyinfo) {
 	// initialize string slice to hold file hashes
-	//h := make([]string, len(os.Args[2:]))
 	fileInfo := []hashinfo{}
 
 	// calculate the hashes for individual files
@@ -74,11 +73,8 @@ func hashFiles(responseSlice *[]replyinfo) {
 		}
 
 		// add file hash into the slice h
-		//h = append(h, string(hash.Sum(nil)))
 		data := hashinfo{Name: element, Hash: hex.EncodeToString(hash.Sum(nil))}
-		//data := hashinfo{element, hex.EncodeToString(hash.Sum(nil))}
 		fileInfo = append(fileInfo, data)
-		//fmt.Println(fileInfo)
 	}
 	
 	// convert to json
@@ -102,16 +98,10 @@ func hashFiles(responseSlice *[]replyinfo) {
         }
 
 	// convert response body to string and print
-	//var responseSlice []replyinfo
-	//_ = json.Unmarshal([]byte(responseBody), &responseSlice)
 	_ = json.Unmarshal([]byte(responseBody), responseSlice)
 
-	//fmt.Println(responseSlice)
 	
 	// processed data from reply
-	//for _, element := range *responseSlice {
-	//fmt.Println(element.Name, element.State)
-	//}	
 
 	defer response.Body.Close()
 	return
@@ -134,15 +124,10 @@ func addFiles(){
 
 		var rinfo []replyinfo
 		// iterate through each files
-		//for _, element := range os.Args[2:]{
 		hashFiles(&rinfo)
 		
 		for _, element := range rinfo{
 
-			// verify the file extension
-			//if verifyFiles() == 1 {
-			//	return
-			//}
 			
 			if element.State == "absent" {
 
@@ -150,7 +135,6 @@ func addFiles(){
 				// absolute path of the files to be uploaded
 				fileRoute := path.Join(dirPath, element.Name)
         
-		//-------------------			fmt.Println(fileRoute)  //##### REMOVE ######
 				// open files to be uploaded
 				openFile, openErr := os.Open(fileRoute)	
 				if openErr != nil{
@@ -159,13 +143,7 @@ func addFiles(){
 					exitCode = 2
 					return
 				}
-		//--------------------			fmt.Println(filepath.Base(openFile.Name()))
-		//---------------			fmt.Println(element)
 				defer openFile.Close()
-		// http://127.0.0.1:5000
-		// Read file contents	
-		//			result, _ := ioutil.ReadAll(openFile)
-		//			fmt.Println(string(result))
 		// upload files
 				
 				// Initialize new empty buffer
@@ -191,7 +169,6 @@ func addFiles(){
                 		responseBody, responseErr := ioutil.ReadAll(response.Body)
         
 				// use the below line for a single update after upload
-                		//_, responseErr = ioutil.ReadAll(response.Body)
                 		if responseErr != nil {
                         		fmt.Fprintf(os.Stderr, "%s\n", responseErr)
                         		// exit code 5 for file not upload error
@@ -264,8 +241,6 @@ func wordCount(){
         }
 
 	// convert response body to string and print
-	//var responseOut int
-	//_ = json.Unmarshal([]byte(responseBody), responseOut)
 	
 	fmt.Println("Total words in file-store:", string(responseBody))
 	
@@ -300,10 +275,8 @@ func freqWords() {
 
 	// convert response body to string and print
 	var responseSlice []string
-	//_ = json.Unmarshal([]byte(responseBody), &responseSlice)
 	_ = json.Unmarshal([]byte(responseBody), &responseSlice)
 
-	//fmt.Println(responseSlice)
 	
 	// processed data from reply
 	for _, element := range responseSlice {
@@ -357,9 +330,6 @@ func main() {
 	defer func(){
 		os.Exit(exitCode)
 	}()
-// testing commandline args
-//	fmt.Println(len(os.Args[2:]), os.Args[2:])
-	//hashFiles()
 
 	// if no cmdline args
 	if len(os.Args) == 1 {
