@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebee-deployment
+  labels:
+    app: filebee
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: filebee
+  template:
+    metadata:
+      labels:
+        app: filebee
+    spec:
+      containers:
+      - name: filebee
+        image: quay.io/noeltredhat/filebee:2.0
+        ports:
+        - containerPort: 8000
+          name: filebee-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: filebee-svc
+spec:
+  selector:
+    app: filebee
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: filebee-port
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: filebee-minimal-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx-example
+  rules:
+  - http:
+      paths:
+      - path: /filebee
+        pathType: Prefix
+        backend:
+          service:
+            name: filebee-svc
+            port:
+              number: 8080
