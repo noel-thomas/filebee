@@ -4,6 +4,7 @@ RUN dnf -y update
 
 RUN dnf -y install python3-pip && dnf clean all
 
+EXPOSE 8000
 # file store directory
 RUN mkdir -p /var/filebee
 
